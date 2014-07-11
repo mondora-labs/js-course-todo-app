@@ -14,21 +14,28 @@ document.addEventListener("DOMContentLoaded", function () {
 		listContainerUl.appendChild(newTodoLi);
 	};
 
-	var addTodoToLocasStorage = function (todo) {
-		// Get the current array from localStorage
-		var list = getListFromLocalStorage();
-		list.push(todo);
-		localStorage.list = JSON.stringify(list);
+	var addTodoToServerList = function (todo) {
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", "add-todo", true);
+		xhr.send(todo);
 	};
 
-	var getListFromLocalStorage = function () {
-		var list;
-		try {
-			list = JSON.parse(localStorage.list);
-		} catch (e) {
-			list = [];
-		}
-		return list;
+	var getListFromSever = function () {
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "list.json", true);
+		// Register handler for the onload event
+		xhr.onload = function () {
+			var list;
+			try {
+				list = JSON.parse(this.response);
+			} catch (e) {
+				list = [];
+			}
+			list.forEach(function (todo) {
+				addTodoToList(todo);
+			});
+		};
+		xhr.send();
 	};
 
 	// Register listeners for the click event
@@ -39,14 +46,10 @@ document.addEventListener("DOMContentLoaded", function () {
 		todoTextInput.value = "";
 		// Add the todo to the list
 		addTodoToList(text);
-		// Add the todo to localStorage
-		addTodoToLocasStorage(text);
+		// Add the todo to the list on the server
+		addTodoToServerList(text);
 	});
 
-	// Load todo-s from localStorage
-	var list = getListFromLocalStorage();
-	list.forEach(function (todo) {
-		addTodoToList(todo);
-	});
+	getListFromSever();
 
 });
